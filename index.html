@@ -1,0 +1,1365 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Social Engineering Awareness</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Inter:wght@400;600;700;900&display=swap">
+
+<style>
+:root {
+  --bg:       #0A1628;
+  --dark:     #0d1e36;
+  --card:     #111e30;
+  --border:   #1c3050;
+  --red:      #e05c5c;
+  --red-dim:  rgba(224,92,92,0.13);
+  --red-glow: rgba(224,92,92,0.28);
+  --gold:     #FFD166;
+  --gold-alt: #E0A96D;
+  --gold-dim: rgba(255,209,102,0.12);
+  --gold-glow:rgba(255,209,102,0.36);
+  --green:    #6fcf8e;
+  --green-dim:rgba(111,207,142,0.11);
+  --white:    #F8F9FA;
+  --grey:     #7a8ea8;
+  --grey2:    #263d56;
+  --teal:     #00c8c8;
+  --font-ar:  'Cairo', sans-serif;
+  --font-en:  'Inter', sans-serif;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  color: var(--white);
+  overflow: hidden;
+  font-family: var(--font-ar);
+}
+
+/* ── ROOM BG ── */
+#room-bg {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  overflow: hidden;
+}
+/* dark overlay so text stays readable */
+#room-bg::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: rgba(5, 12, 24, 0.72);
+  z-index: 1;
+}
+
+/* ── PARTICLES ── */
+#bg { position: fixed; inset: 0; z-index: 1; pointer-events: none; }
+
+/* ── STAGE ── */
+#stage { position: fixed; inset: 0; z-index: 2; display: flex; align-items: center; justify-content: center; }
+
+/* ── SLIDE ── */
+.slide {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 1.2rem 1.4rem 5rem;
+  padding-top: calc(2rem + env(safe-area-inset-top,0px));
+  overflow-y: auto; overflow-x: hidden;
+  opacity: 0; pointer-events: none; text-align: center;
+}
+.slide.active { opacity: 1; pointer-events: all; }
+
+/* content wrapper — subtle backdrop behind text */
+.slide > * { position: relative; z-index: 1; }
+
+/* ── ANIMATION ── */
+.ai {
+  opacity: 0; transform: translateY(18px);
+  transition: opacity .5s cubic-bezier(.22,1,.36,1), transform .5s cubic-bezier(.22,1,.36,1);
+}
+.ai.shown { opacity: 1; transform: none; }
+
+/* ── TYPOGRAPHY ── */
+.eyebrow {
+  font-family: var(--font-en); font-size: 9.5px; font-weight: 700;
+  letter-spacing: 3.5px; text-transform: uppercase;
+  color: var(--grey); margin-bottom: .4rem;
+  white-space: nowrap;
+}
+.eyebrow em { color: var(--gold); font-style: normal; }
+
+.mega {
+  font-family: var(--font-ar);
+  font-size: clamp(32px, 8vw, 56px); font-weight: 900; line-height: 1.15;
+  margin-bottom: .45rem;
+  text-shadow: 0 2px 18px rgba(5,12,24,.9), 0 1px 4px rgba(5,12,24,.95);
+  width: 100%; max-width: 360px;
+}
+.mega .sub { font-family: var(--font-en); font-size: clamp(13px,3vw,18px); display: block; color: var(--grey); font-weight: 600; letter-spacing: 1px; margin-top: .18rem; }
+
+.title-ar { font-family: var(--font-ar); font-size: clamp(21px,5.5vw,30px); font-weight: 900; line-height: 1.25; margin-bottom: .25rem; text-shadow: 0 2px 12px rgba(5,12,24,.9); }
+.title-en { font-family: var(--font-en); font-size: clamp(11px,2.4vw,15px); font-weight: 700; color: var(--grey); letter-spacing: 1.2px; text-transform: uppercase; margin-bottom: .75rem; }
+
+.body-ar { font-family: var(--font-ar); font-size: 15px; line-height: 1.85; color: var(--grey); direction: rtl; text-shadow: 0 1px 8px rgba(5,12,24,.8); }
+.body-en { font-family: var(--font-en); font-size: 13px; line-height: 1.65; color: var(--grey2); }
+
+/* ── UNIVERSITY LOGO BAR ── */
+/* ── GOLD LINE (no dashes) ── */
+.gline {
+  width: 48px; height: 2px; border-radius: 2px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-alt));
+  box-shadow: 0 0 10px var(--gold-glow); margin: .45rem auto;
+}
+
+/* ── COLORS ── */
+.danger  { color: var(--red)  !important; }
+.gold-hi { color: var(--gold) !important; }
+.glow-gold { color: var(--gold); text-shadow: 0 0 18px var(--gold-glow); }
+
+/* ── BIG NUMBER ── */
+.bignum {
+  font-family: var(--font-en); font-size: clamp(54px,14vw,86px);
+  font-weight: 900; color: var(--gold); line-height: 1;
+  text-shadow: 0 0 36px var(--gold-glow), 0 0 72px rgba(255,209,102,.1);
+}
+
+/* ── CARD ── */
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: .85rem 1rem;
+  width: 100%; max-width: 370px;
+}
+.card.rc { border-color: rgba(224,92,92,.28); }
+.card.gc { border-color: rgba(255,209,102,.2); }
+.card.vc { border-color: rgba(111,207,142,.22); }
+
+/* ── ICON BOX ── */
+.ibox {
+  width: 38px; height: 38px; border-radius: 9px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.ib-r { background: var(--red-dim); }
+.ib-g { background: var(--gold-dim); }
+.ib-v { background: var(--green-dim); }
+
+/* ── LIST ITEM ── */
+.litem {
+  display: flex; align-items: flex-start; gap: 11px; direction: rtl;
+  padding: .6rem 0; border-bottom: 1px solid var(--border);
+  width: 100%; max-width: 370px;
+}
+.litem:last-child { border-bottom: none; }
+.litem-body { flex: 1; min-width: 0; }
+.litem-title { font-weight: 700; font-size: 12.5px; margin-bottom: .12rem; }
+.litem-sub   { font-family: var(--font-en); font-size: 10px; color: var(--grey2); }
+
+/* ── SCENE (characters with speech bubbles) ── */
+.scene {
+  display: flex; align-items: flex-end; gap: 10px;
+  width: 100%; max-width: 380px;
+  position: relative;
+}
+.scene.flip { flex-direction: row-reverse; }
+
+/* character block */
+.ch {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 4px; flex-shrink: 0; position: relative;
+}
+.ch-label {
+  font-family: var(--font-en); font-size: 8.5px; font-weight: 700;
+  letter-spacing: .5px; text-transform: uppercase;
+}
+
+/* speech bubble — points left (from right char) or right (from left char) */
+.sbub {
+  position: relative; border-radius: 16px;
+  padding: .55rem .88rem; font-size: 12px;
+  line-height: 1.65; font-family: var(--font-ar); direction: rtl;
+  flex: 1; min-width: 0; align-self: flex-start; margin-bottom: 10px;
+  text-align: right;
+}
+/* tail pointing left (left character speaking → bubble on right) */
+.sbub::before {
+  content: ''; position: absolute; bottom: 0; left: -8px;
+  border: 8px solid transparent;
+  border-right-color: inherit; border-bottom: none;
+}
+/* tail pointing right (right char speaking = .flip scene → bubble on left) */
+.scene.flip .sbub::before {
+  left: auto; right: -8px;
+  border-right-color: transparent;
+  border-left-color: inherit;
+}
+.sb-bad  { background: rgba(224,92,92,.1); border: 1px solid rgba(224,92,92,.25); color: #ffbbbb; border-color: rgba(224,92,92,.25); }
+.sb-warn { background: rgba(255,209,102,.07); border: 1px solid rgba(255,209,102,.2); color: #f0d4a8; border-color: rgba(255,209,102,.2); }
+.sb-ok   { background: rgba(111,207,142,.09); border: 1px solid rgba(111,207,142,.22); color: #a8efbf; border-color: rgba(111,207,142,.22); }
+
+/* ── WARN BOX ── */
+.wbox {
+  border-radius: 11px; padding: .65rem .9rem;
+  font-family: var(--font-ar); font-size: 12px; line-height: 1.7;
+  direction: rtl; width: 100%; max-width: 370px;
+}
+.wb-r { background: var(--red-dim);   border: 1px solid rgba(224,92,92,.26); }
+.wb-g { background: var(--green-dim); border: 1px solid rgba(111,207,142,.26); color: var(--green); }
+.wb-o { background: var(--gold-dim);  border: 1px solid rgba(255,209,102,.26); color: var(--gold); }
+
+/* ── EMAIL BLOCK ── */
+.email {
+  background: #0b1828; border: 1px solid var(--border);
+  border-top: 2.5px solid var(--red);
+  border-radius: 11px; padding: .8rem .95rem;
+  width: 100%; max-width: 370px; direction: rtl; text-align: right;
+}
+.em-from { font-family:var(--font-en); font-size:9.5px; color:var(--red); font-weight:700; direction:ltr; text-align:left; }
+.em-subj { font-size:12.5px; font-weight:700; color:var(--white); margin:.3rem 0; }
+.em-body { font-size:11.5px; color:var(--grey); line-height:1.7; }
+.em-link { font-family:var(--font-en); font-size:10.5px; color:var(--gold-alt); display:block; margin-top:.35rem; direction:ltr; text-align:left; }
+
+/* ── QUIZ OPTION ── */
+.qopt {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 11px; padding: .65rem .95rem;
+  font-size: 12px; font-family: var(--font-ar);
+  color: var(--white); cursor: pointer;
+  width: 100%; max-width: 370px;
+  text-align: right; direction: rtl;
+  transition: border-color .2s; line-height: 1.5;
+}
+.qopt:hover:not(:disabled) { border-color: var(--grey); }
+.qopt.ok  { border-color: var(--green); background: var(--green-dim); color: var(--green); }
+.qopt.err { border-color: var(--red);   background: var(--red-dim);   color: var(--red); }
+
+/* ── SHIELD PULSE ── */
+.spulse { animation: sp 2.8s ease-in-out infinite; }
+@keyframes sp {
+  0%,100% { filter: drop-shadow(0 0 8px rgba(255,209,102,.35)); transform: scale(1); }
+  50%      { filter: drop-shadow(0 0 22px rgba(255,209,102,.75)); transform: scale(1.05); }
+}
+
+/* ── PROGRESS ── */
+#prog-bar  { position:fixed; top:0; left:0; right:0; height:2.5px; z-index:300; background:rgba(255,209,102,.07); }
+#prog-fill { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold-alt)); transition:width .45s ease; box-shadow:0 0 7px var(--gold-glow); width:0% }
+#auto-bar  { position:fixed; top:2.5px; left:0; right:0; height:2px; z-index:301; background:rgba(255,209,102,.05); }
+#auto-fill { height:100%; background:rgba(255,209,102,.35); width:0% }
+
+/* ── NAV ── */
+#nav {
+  position:fixed; bottom:0; left:0; right:0;
+  padding:.8rem 1.15rem;
+  padding-bottom:max(.8rem, env(safe-area-inset-bottom,0px));
+  background:linear-gradient(to top, rgba(10,22,40,.95) 60%, transparent);
+  z-index:200; display:flex; align-items:center; justify-content:space-between;
+}
+.nbtn {
+  width:38px; height:38px; border-radius:50%;
+  background:var(--card); border:1px solid var(--border);
+  color:var(--white); font-size:14px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:border-color .2s;
+}
+.nbtn:hover:not(:disabled) { border-color:var(--gold); }
+.nbtn:disabled { opacity:.3; cursor:default; }
+.dots { display:flex; gap:5px; align-items:center; }
+.dot  { width:5px; height:5px; border-radius:3px; background:var(--border); transition:all .3s; cursor:pointer; }
+.dot.on { background:var(--gold); width:14px; box-shadow:0 0 6px var(--gold-glow); }
+.sctr { font-family:var(--font-en); font-size:9.5px; color:var(--grey); min-width:30px; text-align:center; font-variant-numeric:tabular-nums; }
+
+@media(max-width:400px){ .mega { font-size:clamp(24px,9vw,40px); } }
+@media(prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important;} }
+
+/* ── AUTO CURSOR ── */
+#auto-cursor {
+  position: fixed; z-index: 999; pointer-events: none;
+  width: 28px; height: 28px;
+  transform: translate(-50%, -50%);
+  transition: left .5s cubic-bezier(.4,0,.2,1), top .5s cubic-bezier(.4,0,.2,1);
+  opacity: 0;
+}
+#auto-cursor svg { filter: drop-shadow(0 2px 6px rgba(0,0,0,.5)); }
+.cursor-click { animation: cursorClick .25s ease; }
+@keyframes cursorClick {
+  0%   { transform: translate(-50%,-50%) scale(1); }
+  40%  { transform: translate(-50%,-50%) scale(.7); }
+  100% { transform: translate(-50%,-50%) scale(1); }
+}
+</style>
+
+<!-- ════════ SVG SYMBOLS ════════ -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+<defs>
+
+<!-- ── HACKER (dark hoodie, glowing red eyes, no mask visible face outline) ── -->
+<symbol id="c-hacker" viewBox="0 0 70 110">
+  <!-- legs -->
+  <rect x="20" y="80" width="12" height="28" rx="6" fill="#111"/>
+  <rect x="38" y="80" width="12" height="28" rx="6" fill="#111"/>
+  <!-- body hoodie -->
+  <rect x="12" y="48" width="46" height="36" rx="12" fill="#1a0a0a"/>
+  <!-- center zip -->
+  <rect x="32" y="48" width="6" height="36" rx="3" fill="#130808" opacity=".7"/>
+  <!-- pocket -->
+  <rect x="14" y="68" width="42" height="14" rx="7" fill="#130808" opacity=".5"/>
+  <!-- arms -->
+  <path d="M12 54 Q2 62 5 76 Q8 80 14 78 L16 68 Q12 65 14 56Z" fill="#1a0a0a"/>
+  <path d="M58 54 Q68 62 65 76 Q62 80 56 78 L54 68 Q58 65 56 56Z" fill="#1a0a0a"/>
+  <!-- hands -->
+  <ellipse cx="7" cy="78" rx="6" ry="5" fill="#c8856a"/>
+  <ellipse cx="63" cy="78" rx="6" ry="5" fill="#c8856a"/>
+  <!-- neck -->
+  <rect x="28" y="38" width="14" height="14" rx="4" fill="#1a0808"/>
+  <!-- head -->
+  <ellipse cx="35" cy="28" rx="22" ry="24" fill="#1a0a0a"/>
+  <!-- hood deep shadow -->
+  <ellipse cx="35" cy="14" rx="24" ry="16" fill="#0d0404"/>
+  <!-- face area -->
+  <ellipse cx="35" cy="32" rx="15" ry="16" fill="#2a1212"/>
+  <!-- glowing eyes -->
+  <ellipse cx="27" cy="28" rx="5" ry="4" fill="#ff1a1a"/>
+  <ellipse cx="43" cy="28" rx="5" ry="4" fill="#ff1a1a"/>
+  <ellipse cx="27" cy="28" rx="2.5" ry="2" fill="#ff8080"/>
+  <ellipse cx="43" cy="28" rx="2.5" ry="2" fill="#ff8080"/>
+  <ellipse cx="27" cy="28" rx="7" ry="5.5" fill="rgba(255,26,26,.15)"/>
+  <ellipse cx="43" cy="28" rx="7" ry="5.5" fill="rgba(255,26,26,.15)"/>
+  <!-- nose -->
+  <path d="M33 35 Q35 38 37 35" stroke="#3d1515" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <!-- smirk -->
+  <path d="M28 40 Q35 44 42 40" stroke="#3d1515" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</symbol>
+
+<!-- ── VICTIM (blue shirt, scared wide eyes, sweat) ── -->
+<symbol id="c-victim" viewBox="0 0 70 110">
+  <!-- legs -->
+  <rect x="20" y="80" width="12" height="28" rx="6" fill="#1a2a3a"/>
+  <rect x="38" y="80" width="12" height="28" rx="6" fill="#1a2a3a"/>
+  <!-- body shirt -->
+  <rect x="12" y="48" width="46" height="36" rx="12" fill="#1a3060"/>
+  <!-- collar -->
+  <path d="M27 48 L35 58 L43 48" stroke="#1e3a72" stroke-width="2" fill="none"/>
+  <!-- arms -->
+  <path d="M12 54 Q2 62 5 76 Q8 80 14 78 L16 68 Q12 65 14 56Z" fill="#1a3060"/>
+  <path d="M58 54 Q68 62 65 76 Q62 80 56 78 L54 68 Q58 65 56 56Z" fill="#1a3060"/>
+  <!-- hands -->
+  <ellipse cx="7" cy="78" rx="6" ry="5" fill="#f5c080"/>
+  <ellipse cx="63" cy="78" rx="6" ry="5" fill="#f5c080"/>
+  <!-- neck -->
+  <rect x="28" y="38" width="14" height="14" rx="4" fill="#f5c080"/>
+  <!-- head -->
+  <ellipse cx="35" cy="26" rx="20" ry="22" fill="#f5c080"/>
+  <!-- hair -->
+  <ellipse cx="35" cy="10" rx="19" ry="12" fill="#3d2000"/>
+  <rect x="15" y="10" width="5" height="18" rx="2.5" fill="#3d2000"/>
+  <rect x="50" y="10" width="5" height="18" rx="2.5" fill="#3d2000"/>
+  <!-- scared eyes (extra wide) -->
+  <ellipse cx="26" cy="24" rx="5.5" ry="6.5" fill="#fff"/>
+  <ellipse cx="44" cy="24" rx="5.5" ry="6.5" fill="#fff"/>
+  <circle cx="27" cy="25" r="3" fill="#2a1800"/>
+  <circle cx="45" cy="25" r="3" fill="#2a1800"/>
+  <circle cx="28" cy="23.5" r="1" fill="#fff"/>
+  <circle cx="46" cy="23.5" r="1" fill="#fff"/>
+  <!-- eyebrows raised (scared) -->
+  <path d="M21 18 Q26 15 31 18" stroke="#3d2000" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M39 18 Q44 15 49 18" stroke="#3d2000" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <!-- sweat drops -->
+  <path d="M52 14 Q53.5 10.5 55 14 Q56 17 54 18 Q52 17 52 14Z" fill="#80c4ff" opacity=".9"/>
+  <path d="M55 22 Q56 19.5 57 22 Q57.5 24 56 25 Q55 24 55 22Z" fill="#80c4ff" opacity=".7"/>
+  <!-- open mouth scared -->
+  <ellipse cx="35" cy="36" rx="6" ry="5" fill="#8b3a1a"/>
+  <ellipse cx="35" cy="36" rx="4" ry="3.5" fill="#5a1a00"/>
+</symbol>
+
+<!-- ── SAFE PERSON (woman, green, calm smile) ── -->
+<symbol id="c-safe" viewBox="0 0 70 110">
+  <!-- legs -->
+  <rect x="20" y="80" width="12" height="28" rx="6" fill="#0d2018"/>
+  <rect x="38" y="80" width="12" height="28" rx="6" fill="#0d2018"/>
+  <!-- body -->
+  <rect x="12" y="48" width="46" height="36" rx="12" fill="#0d2a1a"/>
+  <!-- badge -->
+  <rect x="34" y="52" width="16" height="11" rx="4" fill="#0f4020"/>
+  <rect x="36" y="54" width="12" height="7" rx="3" fill="#1a6a30"/>
+  <path d="M38 57.5 L40 60 L45 55" stroke="#6fcf8e" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- arms -->
+  <path d="M12 54 Q2 62 5 76 Q8 80 14 78 L16 68 Q12 65 14 56Z" fill="#0d2a1a"/>
+  <path d="M58 54 Q68 62 65 76 Q62 80 56 78 L54 68 Q58 65 56 56Z" fill="#0d2a1a"/>
+  <!-- hands -->
+  <ellipse cx="7" cy="78" rx="6" ry="5" fill="#f5c080"/>
+  <ellipse cx="63" cy="78" rx="6" ry="5" fill="#f5c080"/>
+  <!-- neck -->
+  <rect x="28" y="38" width="14" height="14" rx="4" fill="#f5c080"/>
+  <!-- head -->
+  <ellipse cx="35" cy="26" rx="20" ry="22" fill="#f5c080"/>
+  <!-- hair (longer) -->
+  <ellipse cx="35" cy="9" rx="19" ry="11" fill="#2a1000"/>
+  <rect x="15" y="9" width="5" height="24" rx="2.5" fill="#2a1000"/>
+  <rect x="50" y="9" width="5" height="24" rx="2.5" fill="#2a1000"/>
+  <!-- calm eyes -->
+  <ellipse cx="26" cy="25" rx="4.5" ry="4.5" fill="#fff"/>
+  <ellipse cx="44" cy="25" rx="4.5" ry="4.5" fill="#fff"/>
+  <circle cx="27" cy="26" r="2.2" fill="#2a1800"/>
+  <circle cx="45" cy="26" r="2.2" fill="#2a1800"/>
+  <circle cx="27.8" cy="24.8" r=".8" fill="#fff"/>
+  <circle cx="45.8" cy="24.8" r=".8" fill="#fff"/>
+  <!-- smile -->
+  <path d="M27 34 Q35 40 43 34" stroke="#c8906a" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+</symbol>
+
+<!-- ── OFFICER (uniform, gold badge, stern) ── -->
+<symbol id="c-officer" viewBox="0 0 70 110">
+  <!-- legs dark -->
+  <rect x="20" y="80" width="12" height="28" rx="6" fill="#0a1422"/>
+  <rect x="38" y="80" width="12" height="28" rx="6" fill="#0a1422"/>
+  <!-- body uniform -->
+  <rect x="12" y="48" width="46" height="36" rx="12" fill="#0d1b2a"/>
+  <!-- shoulder patches -->
+  <rect x="10" y="48" width="14" height="10" rx="4" fill="#162840"/>
+  <rect x="46" y="48" width="14" height="10" rx="4" fill="#162840"/>
+  <!-- gold badge -->
+  <rect x="24" y="53" width="22" height="13" rx="4" fill="#ffd166" opacity=".9"/>
+  <path d="M28 58.5 L31 62 L38 56" stroke="#0d1b2a" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- arms -->
+  <path d="M12 54 Q2 62 5 76 Q8 80 14 78 L16 68 Q12 65 14 56Z" fill="#0d1b2a"/>
+  <path d="M58 54 Q68 62 65 76 Q62 80 56 78 L54 68 Q58 65 56 56Z" fill="#0d1b2a"/>
+  <!-- hands -->
+  <ellipse cx="7" cy="78" rx="6" ry="5" fill="#f0b888"/>
+  <ellipse cx="63" cy="78" rx="6" ry="5" fill="#f0b888"/>
+  <!-- neck -->
+  <rect x="28" y="38" width="14" height="14" rx="4" fill="#f0b888"/>
+  <!-- head -->
+  <ellipse cx="35" cy="26" rx="20" ry="22" fill="#f0b888"/>
+  <!-- cap -->
+  <ellipse cx="35" cy="10" rx="22" ry="9" fill="#0d1b2a"/>
+  <rect x="13" y="14" width="44" height="7" rx="2" fill="#162840"/>
+  <rect x="11" y="19" width="48" height="4" rx="2" fill="#ffd166" opacity=".65"/>
+  <!-- eyes stern -->
+  <ellipse cx="26" cy="26" rx="4.5" ry="4.5" fill="#fff"/>
+  <ellipse cx="44" cy="26" rx="4.5" ry="4.5" fill="#fff"/>
+  <circle cx="27" cy="27" r="2.2" fill="#1a0e00"/>
+  <circle cx="45" cy="27" r="2.2" fill="#1a0e00"/>
+  <!-- stern brows -->
+  <path d="M21 21 Q26 19 31 21" stroke="#3a2800" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M39 21 Q44 19 49 21" stroke="#3a2800" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- firm mouth -->
+  <path d="M27 36 L43 36" stroke="#c08060" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+</symbol>
+
+<!-- ── FAKE EMPLOYEE (grey uniform, crooked badge, shifty) ── -->
+<symbol id="c-fakemp" viewBox="0 0 70 110">
+  <!-- legs -->
+  <rect x="20" y="80" width="12" height="28" rx="6" fill="#1a1a2a"/>
+  <rect x="38" y="80" width="12" height="28" rx="6" fill="#1a1a2a"/>
+  <!-- body grey uniform -->
+  <rect x="12" y="48" width="46" height="36" rx="12" fill="#1e2030"/>
+  <!-- fake badge (tilted) -->
+  <rect x="14" y="52" width="18" height="12" rx="4" fill="#2a2a44" transform="rotate(-10 23 58)"/>
+  <rect x="16" y="54" width="14" height="8" rx="2.5" fill="#3a3a60" transform="rotate(-10 23 58)"/>
+  <!-- clipboard in arm -->
+  <path d="M58 54 Q68 62 65 76 Q62 80 56 78 L54 68 Q58 65 56 56Z" fill="#1e2030"/>
+  <rect x="50" y="55" width="18" height="22" rx="4" fill="#283048"/>
+  <rect x="53" y="60" width="12" height="2" rx="1" fill="#3a4258"/>
+  <rect x="53" y="64" width="12" height="2" rx="1" fill="#3a4258"/>
+  <rect x="53" y="68" width="8"  height="2" rx="1" fill="#3a4258"/>
+  <!-- left arm -->
+  <path d="M12 54 Q2 62 5 76 Q8 80 14 78 L16 68 Q12 65 14 56Z" fill="#1e2030"/>
+  <!-- hands -->
+  <ellipse cx="7"  cy="78" rx="6" ry="5" fill="#f0c090"/>
+  <ellipse cx="67" cy="70" rx="6" ry="5" fill="#f0c090"/>
+  <!-- neck -->
+  <rect x="28" y="38" width="14" height="14" rx="4" fill="#f0c090"/>
+  <!-- head (slightly off centre for shifty look) -->
+  <ellipse cx="33" cy="26" rx="20" ry="22" fill="#f0c090"/>
+  <!-- dark hair -->
+  <ellipse cx="33" cy="10" rx="19" ry="11" fill="#1a0a00"/>
+  <!-- shifty eyes looking sideways -->
+  <ellipse cx="25" cy="25" rx="4.5" ry="4.5" fill="#fff"/>
+  <ellipse cx="42" cy="25" rx="4.5" ry="4.5" fill="#fff"/>
+  <circle cx="28" cy="25.5" r="2.2" fill="#1a0e00"/>
+  <circle cx="45" cy="25.5" r="2.2" fill="#1a0e00"/>
+  <!-- smirk -->
+  <path d="M25 36 Q35 41 43 36" stroke="#c08060" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <!-- raised eyebrow (sly) -->
+  <path d="M20 19 Q25 17.5 30 19.5" stroke="#3a2800" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M37 19.5 Q42 17.5 47 19" stroke="#3a2800" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+</symbol>
+
+<!-- ICONS -->
+<symbol id="i-shield" viewBox="0 0 48 56">
+  <defs><linearGradient id="sg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1a2e44"/><stop offset="100%" stop-color="#0d1b2a"/></linearGradient></defs>
+  <path d="M24 2L4 10v18c0 13 9 24 20 27 11-3 20-14 20-27V10L24 2z" fill="url(#sg1)" stroke="rgba(255,209,102,.4)" stroke-width="1.5"/>
+  <path d="M16 27l6 6 10-12" stroke="#FFD166" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+<symbol id="i-warn" viewBox="0 0 48 44">
+  <path d="M24 2L2 42h44L24 2z" fill="rgba(224,92,92,.13)" stroke="#e05c5c" stroke-width="2" stroke-linejoin="round"/>
+  <rect x="22" y="15" width="4" height="14" rx="2" fill="#e05c5c"/>
+  <circle cx="24" cy="35" r="2.5" fill="#e05c5c"/>
+</symbol>
+<symbol id="i-check" viewBox="0 0 48 48">
+  <circle cx="24" cy="24" r="22" fill="rgba(111,207,142,.1)" stroke="#6fcf8e" stroke-width="2"/>
+  <path d="M14 24l8 8 12-14" stroke="#6fcf8e" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</symbol>
+<symbol id="i-brain" viewBox="0 0 48 48">
+  <ellipse cx="24" cy="24" rx="20" ry="18" fill="rgba(224,92,92,.08)" stroke="#e05c5c" stroke-width="1.5"/>
+  <path d="M24 10 Q30 14 28 20 Q34 20 32 28 Q36 30 34 36" stroke="#e05c5c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M24 10 Q18 14 20 20 Q14 20 16 28 Q12 30 14 36" stroke="#e05c5c" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+</symbol>
+<symbol id="i-lock" viewBox="0 0 48 48">
+  <rect x="8" y="22" width="32" height="22" rx="6" fill="rgba(111,207,142,.1)" stroke="#6fcf8e" stroke-width="1.5"/>
+  <path d="M14 22v-8a10 10 0 0120 0v8" stroke="#6fcf8e" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <circle cx="24" cy="33" r="3.5" fill="#6fcf8e" opacity=".7"/>
+  <rect x="22.5" y="33" width="3" height="5" rx="1.5" fill="#6fcf8e" opacity=".7"/>
+</symbol>
+<symbol id="i-id" viewBox="0 0 48 36">
+  <rect x="2" y="2" width="44" height="32" rx="5" fill="rgba(224,92,92,.08)" stroke="#e05c5c" stroke-width="1.5"/>
+  <circle cx="14" cy="18" r="7" fill="rgba(224,92,92,.18)" stroke="#e05c5c" stroke-width="1"/>
+  <rect x="25" y="11" width="16" height="2.5" rx="1.25" fill="#e05c5c" opacity=".7"/>
+  <rect x="25" y="16" width="12" height="2.5" rx="1.25" fill="#e05c5c" opacity=".5"/>
+  <rect x="25" y="21" width="9"  height="2.5" rx="1.25" fill="#e05c5c" opacity=".35"/>
+</symbol>
+<symbol id="i-mega" viewBox="0 0 48 48">
+  <path d="M8 18v12h8l14 10V8L16 18H8z" fill="rgba(255,209,102,.13)" stroke="#FFD166" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M36 15 Q43 24 36 33" stroke="#FFD166" stroke-width="2" fill="none" stroke-linecap="round"/>
+</symbol>
+</defs>
+</svg>
+
+<!-- ════ CONTROL ROOM BACKGROUND ════ -->
+<div id="room-bg">
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0">
+  <defs>
+    <linearGradient id="floor-g" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#0a1628"/>
+      <stop offset="100%" stop-color="#060e1c"/>
+    </linearGradient>
+    <linearGradient id="ceiling-g" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#06101e"/>
+      <stop offset="100%" stop-color="#0a1628"/>
+    </linearGradient>
+    <radialGradient id="screen-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#002a3a" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#001520" stop-opacity="1"/>
+    </radialGradient>
+    <filter id="scr-blur"><feGaussianBlur stdDeviation="1.5"/></filter>
+    <filter id="glow-f"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+
+  <!-- dark room -->
+  <rect width="100%" height="100%" fill="#070f1c"/>
+
+  <!-- ceiling light strip -->
+  <rect x="0" y="0" width="100%" height="4" fill="rgba(0,200,200,.08)"/>
+  <rect x="10%" y="0" width="80%" height="2" rx="1" fill="rgba(0,200,200,.22)"/>
+
+  <!-- back wall dark -->
+  <rect x="0" y="0" width="100%" height="62%" fill="#080e1a" opacity=".6"/>
+
+  <!-- === MONITOR WALL (3 rows of screens) === -->
+  <!-- Row 1 — big center screens -->
+  <!-- Screen 1 (left large) -->
+  <rect x="4%" y="6%" width="28%" height="20%" rx="4" fill="#001824" stroke="#0a3040" stroke-width="1.5"/>
+  <rect x="4.5%" y="6.5%" width="27%" height="19%" rx="3" fill="url(#screen-glow)"/>
+  <!-- fake graph on screen 1 -->
+  <polyline points="6%,22% 10%,18% 14%,20% 18%,14% 22%,16% 26%,12% 30%,15%" stroke="#00c8c8" stroke-width="1.2" fill="none" opacity=".7" vector-effect="non-scaling-stroke"/>
+  <rect x="5%" y="7.5%" width="12%" height="1.5%" rx="1" fill="rgba(0,200,200,.18)"/>
+  <rect x="5%" y="10%" width="8%"  height="1%"  rx="1" fill="rgba(0,200,200,.1)"/>
+  <!-- Screen glow behind -->
+  <rect x="4%" y="6%" width="28%" height="20%" rx="4" fill="none" stroke="rgba(0,200,200,.12)" stroke-width="3" filter="url(#glow-f)"/>
+
+  <!-- Screen 2 (center large) -->
+  <rect x="36%" y="4%" width="28%" height="22%" rx="4" fill="#001824" stroke="#0a3040" stroke-width="1.5"/>
+  <rect x="36.5%" y="4.5%" width="27%" height="21%" rx="3" fill="url(#screen-glow)"/>
+  <!-- world map silhouette dots -->
+  <circle cx="43%" cy="11%" r="1.2%" fill="none" stroke="rgba(0,200,200,.3)" stroke-width=".8"/>
+  <circle cx="50%" cy="9%"  r=".9%" fill="rgba(0,200,200,.15)"/>
+  <circle cx="56%" cy="12%" r=".8%" fill="rgba(0,200,200,.15)"/>
+  <circle cx="47%" cy="14%" r=".6%" fill="rgba(255,80,80,.25)"/>
+  <polyline points="43%,11% 47%,14% 50%,9% 56%,12%" stroke="rgba(0,200,200,.2)" stroke-width=".8" fill="none"/>
+  <rect x="37%" y="22%" width="9%" height=".8%" rx=".5" fill="rgba(255,80,80,.3)"/>
+  <rect x="37%" y="23.5%" width="6%" height=".8%" rx=".5" fill="rgba(0,200,200,.2)"/>
+  <!-- Center screen glow -->
+  <rect x="36%" y="4%" width="28%" height="22%" rx="4" fill="none" stroke="rgba(0,200,200,.15)" stroke-width="3" filter="url(#glow-f)"/>
+
+  <!-- Screen 3 (right large) -->
+  <rect x="68%" y="6%" width="28%" height="20%" rx="4" fill="#001824" stroke="#0a3040" stroke-width="1.5"/>
+  <rect x="68.5%" y="6.5%" width="27%" height="19%" rx="3" fill="url(#screen-glow)"/>
+  <!-- bar chart on screen 3 -->
+  <rect x="70%" y="18%" width="3%" height="6%" rx=".5" fill="rgba(0,200,200,.35)"/>
+  <rect x="74%" y="15%" width="3%" height="9%" rx=".5" fill="rgba(0,200,200,.45)"/>
+  <rect x="78%" y="19%" width="3%" height="5%" rx=".5" fill="rgba(255,80,80,.4)"/>
+  <rect x="82%" y="13%" width="3%" height="11%" rx=".5" fill="rgba(0,200,200,.5)"/>
+  <rect x="86%" y="17%" width="3%" height="7%" rx=".5" fill="rgba(0,200,200,.3)"/>
+  <rect x="90%" y="20%" width="3%" height="4%" rx=".5" fill="rgba(255,209,102,.35)"/>
+  <rect x="68%" y="6%" width="28%" height="20%" rx="4" fill="none" stroke="rgba(0,200,200,.1)" stroke-width="3" filter="url(#glow-f)"/>
+
+  <!-- Row 2 — small screens -->
+  <rect x="2%"  y="28%" width="15%" height="11%" rx="3" fill="#001018" stroke="#082030" stroke-width="1"/>
+  <rect x="2.5%" y="28.5%" width="14%" height="10%" rx="2" fill="#001420"/>
+  <polyline points="3%,36% 6%,33% 9%,35% 12%,31% 15%,33%" stroke="#ffd166" stroke-width="1" fill="none" opacity=".6" vector-effect="non-scaling-stroke"/>
+
+  <rect x="19%" y="28%" width="15%" height="11%" rx="3" fill="#001018" stroke="#082030" stroke-width="1"/>
+  <rect x="19.5%" y="28.5%" width="14%" height="10%" rx="2" fill="#00141a"/>
+  <rect x="20%" y="30%" width="6%" height="1%" rx=".5" fill="rgba(255,80,80,.4)"/>
+  <rect x="20%" y="32%" width="10%" height=".8%" rx=".5" fill="rgba(0,200,200,.3)"/>
+  <rect x="20%" y="34%" width="7%" height=".8%" rx=".5" fill="rgba(0,200,200,.2)"/>
+  <rect x="20%" y="36%" width="9%" height=".8%" rx=".5" fill="rgba(255,209,102,.25)"/>
+
+  <rect x="66%" y="28%" width="15%" height="11%" rx="3" fill="#001018" stroke="#082030" stroke-width="1"/>
+  <rect x="66.5%" y="28.5%" width="14%" height="10%" rx="2" fill="#001220"/>
+  <circle cx="73.5%" cy="33.5%" r="3.5%" fill="none" stroke="rgba(0,200,200,.25)" stroke-width="1"/>
+  <line x1="73.5%" y1="33.5%" x2="73.5%" y2="29.5%" stroke="#00c8c8" stroke-width=".8" opacity=".5"/>
+  <line x1="73.5%" y1="33.5%" x2="77%" y2="36%" stroke="#ffd166" stroke-width=".8" opacity=".5"/>
+
+  <rect x="83%" y="28%" width="15%" height="11%" rx="3" fill="#001018" stroke="#082030" stroke-width="1"/>
+  <rect x="83.5%" y="28.5%" width="14%" height="10%" rx="2" fill="#001824"/>
+  <rect x="84%" y="30%" width="8%" height="1.2%" rx=".6" fill="rgba(0,200,200,.4)"/>
+  <rect x="84%" y="32.5%" width="11%" height="1.2%" rx=".6" fill="rgba(0,200,200,.25)"/>
+  <rect x="84%" y="35%" width="5%" height="1.2%" rx=".6" fill="rgba(255,80,80,.4)"/>
+
+  <!-- desk surface -->
+  <rect x="0" y="62%" width="100%" height="4%" fill="#0a1824" opacity=".9"/>
+  <rect x="0" y="62%" width="100%" height="1%" fill="rgba(0,200,200,.07)"/>
+
+  <!-- desktop computers row -->
+  <!-- Computer 1 -->
+  <rect x="3%"  y="44%" width="10%" height="17%" rx="2" fill="#081420" stroke="#0a2030" stroke-width=".8"/>
+  <rect x="3.5%" y="44.5%" width="9%" height="16%" rx="1.5" fill="#001828"/>
+  <polyline points="4%,57% 6%,54% 8%,55% 10%,52% 12%,54%" stroke="#00c8c8" stroke-width=".8" fill="none" opacity=".5" vector-effect="non-scaling-stroke"/>
+
+  <!-- Computer 2 -->
+  <rect x="18%" y="44%" width="10%" height="17%" rx="2" fill="#081420" stroke="#0a2030" stroke-width=".8"/>
+  <rect x="18.5%" y="44.5%" width="9%" height="16%" rx="1.5" fill="#001828"/>
+  <rect x="19%" y="46%" width="5%" height=".8%" rx=".4" fill="rgba(255,80,80,.4)"/>
+  <rect x="19%" y="48%" width="7%" height=".8%" rx=".4" fill="rgba(0,200,200,.3)"/>
+  <rect x="19%" y="50%" width="4%" height=".8%" rx=".4" fill="rgba(255,80,80,.4)"/>
+  <rect x="19%" y="52%" width="6%" height=".8%" rx=".4" fill="rgba(0,200,200,.2)"/>
+  <rect x="19%" y="54%" width="3%" height=".8%" rx=".4" fill="rgba(255,209,102,.3)"/>
+
+  <!-- Computer 3 -->
+  <rect x="65%" y="44%" width="10%" height="17%" rx="2" fill="#081420" stroke="#0a2030" stroke-width=".8"/>
+  <rect x="65.5%" y="44.5%" width="9%" height="16%" rx="1.5" fill="#001828"/>
+  <rect x="66%" y="46%" width="8%" height=".8%" rx=".4" fill="rgba(0,200,200,.3)"/>
+  <rect x="66%" y="48%" width="5%" height=".8%" rx=".4" fill="rgba(255,80,80,.4)"/>
+  <rect x="66%" y="50%" width="7%" height=".8%" rx=".4" fill="rgba(0,200,200,.2)"/>
+
+  <!-- Computer 4 -->
+  <rect x="80%" y="44%" width="10%" height="17%" rx="2" fill="#081420" stroke="#0a2030" stroke-width=".8"/>
+  <rect x="80.5%" y="44.5%" width="9%" height="16%" rx="1.5" fill="#001828"/>
+  <circle cx="85%" cy="52%" r="4%" fill="none" stroke="rgba(0,200,200,.2)" stroke-width=".8"/>
+  <line x1="85%" y1="48%" x2="85%" y2="52%" stroke="#00c8c8" stroke-width=".6" opacity=".4"/>
+
+  <!-- keyboards -->
+  <rect x="3%"  y="62.5%" width="10%" height="1.5%" rx="1" fill="#0a1a28"/>
+  <rect x="18%" y="62.5%" width="10%" height="1.5%" rx="1" fill="#0a1a28"/>
+  <rect x="65%" y="62.5%" width="10%" height="1.5%" rx="1" fill="#0a1a28"/>
+  <rect x="80%" y="62.5%" width="10%" height="1.5%" rx="1" fill="#0a1a28"/>
+
+  <!-- teal ambient glow from screens -->
+  <rect x="0" y="0" width="100%" height="66%" fill="rgba(0,100,120,.04)"/>
+
+  <!-- floor gradient fade -->
+  <rect x="0" y="62%" width="100%" height="38%" fill="rgba(6,10,18,.85)"/>
+
+  <!-- scan line overlay -->
+  <rect x="0" y="0" width="100%" height="100%" fill="url(#scanlines)" opacity=".03"/>
+  <defs>
+    <pattern id="scanlines" x="0" y="0" width="100%" height="3" patternUnits="userSpaceOnUse">
+      <rect width="100%" height="1.5" fill="rgba(255,255,255,.06)"/>
+    </pattern>
+  </defs>
+</svg>
+</div>
+
+<canvas id="bg"></canvas>
+<div id="auto-cursor">
+  <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
+    <path d="M4 2L4 22L9 17L13 26L16 24.5L12 15.5L19 15.5L4 2Z" fill="white" stroke="#333" stroke-width="1.2" stroke-linejoin="round"/>
+    <circle cx="22" cy="22" r="5" fill="var(--red)" opacity=".85"/>
+  </svg>
+</div>
+<div id="prog-bar"><div id="prog-fill"></div></div>
+<div id="auto-bar"><div id="auto-fill"></div></div>
+
+<div id="stage">
+
+<!-- ══════ 0: HERO ══════ -->
+<section class="slide active" id="s0" data-auto="10">
+  <div class="ai" style="margin-bottom:.25rem">
+    <svg class="spulse" width="70" height="82" viewBox="0 0 48 56"><use href="#i-shield"/></svg>
+  </div>
+  <div class="ai eyebrow" style="font-family:var(--font-ar);letter-spacing:1px">توعية الأمن السيبراني</div>
+  <div class="ai eyebrow">CYBERSECURITY AWARENESS</div>
+  <div class="ai mega">
+    الهندسة الاجتماعية
+    <span class="sub">Social Engineering</span>
+  </div>
+  <div class="ai gline"></div>
+  <div class="ai body-ar">حين يكون <span class="danger">العقل البشري</span> هو الثغرة</div>
+  <div class="ai body-en" style="margin-top:.18rem">When the human mind becomes the vulnerability</div>
+</section>
+
+<!-- ══════ 1: STAT ══════ -->
+<section class="slide" id="s1" data-auto="10">
+  <div class="ai eyebrow" style="font-family:var(--font-ar);letter-spacing:1px">حجم الخطر</div>
+  <div class="ai eyebrow">THE SCALE</div>
+  <div class="ai bignum">98%</div>
+  <div class="ai title-ar glow-gold">من الاختراقات تبدأ بخداع بشري</div>
+  <div class="ai title-en">of all cyberattacks start with human manipulation</div>
+  <div class="ai gline"></div>
+  <div class="ai body-ar">ليس الجهاز ولا البرنامج — <span class="danger">أنت الهدف</span></div>
+  <div class="ai body-en">Not the device, not the software — <em style="color:var(--red)">you are the target</em></div>
+</section>
+
+<!-- ══════ 2: WHAT IS IT ══════ -->
+<section class="slide" id="s2" data-auto="10">
+  <div class="ai eyebrow" style="font-family:var(--font-ar);letter-spacing:1px">تعريف</div>
+  <div class="ai eyebrow">DEFINITION</div>
+  <div class="ai title-ar">ما هي الهندسة الاجتماعية؟</div>
+  <div class="ai title-en">What is Social Engineering?</div>
+
+  <div class="ai card" style="margin-bottom:.5rem;direction:rtl;text-align:right">
+    <div class="body-ar">المهاجم يستغل <span class="danger">ثقتك ومشاعرك</span> لا جدار الحماية</div>
+    <div class="body-en" style="margin-top:.18rem">Attackers exploit your <span style="color:var(--red)">trust and emotions</span>, not your firewall</div>
+  </div>
+
+  <div class="ai litem">
+    <div class="ibox ib-r"><svg width="26" height="26" viewBox="0 0 48 44"><use href="#i-warn"/></svg></div>
+    <div class="litem-body">
+      <div class="litem-title danger">الخوف · Fear</div>
+      <div class="body-ar" style="font-size:11px">"حسابك سيُغلق خلال ساعة!"</div>
+      <div class="litem-sub">"Your account closes in 1 hour!"</div>
+    </div>
+  </div>
+  <div class="ai litem">
+    <div class="ibox ib-g"><svg width="26" height="26" viewBox="0 0 48 36"><use href="#i-id"/></svg></div>
+    <div class="litem-body">
+      <div class="litem-title gold-hi">الثقة · Trust</div>
+      <div class="body-ar" style="font-size:11px">"أنا من قسم تقنية المعلومات"</div>
+      <div class="litem-sub">"I'm from your IT department"</div>
+    </div>
+  </div>
+  <div class="ai litem" style="border-bottom:none">
+    <div class="ibox ib-v"><svg width="26" height="26" viewBox="0 0 48 48"><use href="#i-mega"/></svg></div>
+    <div class="litem-body">
+      <div class="litem-title" style="color:var(--gold-alt)">الإلحاح · Urgency</div>
+      <div class="body-ar" style="font-size:11px">"تصرف الآن أو ستخسر كل شيء!"</div>
+      <div class="litem-sub">"Act now or lose everything!"</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ 3: CHAT SCENARIO ══════ -->
+<section class="slide" id="s3" data-auto="10">
+  <div class="ai eyebrow" style="font-family:var(--font-ar);letter-spacing:1px">سيناريو ١</div>
+  <div class="ai eyebrow">SCENARIO 1</div>
+  <div class="ai title-ar">مكالمة الدعم التقني الوهمية</div>
+  <div class="ai title-en">Fake Technical Support Call</div>
+
+  <!-- hacker speaking to victim -->
+  <div class="ai scene" style="max-width:370px;margin-bottom:.5rem">
+    <div class="ch">
+      <svg width="62" height="98" viewBox="0 0 70 110"><use href="#c-hacker"/></svg>
+      <span class="ch-label" style="color:var(--red)">Hacker</span>
+    </div>
+    <div class="sbub sb-bad" style="align-self:center">
+      مرحباً، أتصل من الدعم التقني.<br>
+      رصدنا <span class="danger" style="font-weight:700">اختراقاً خطيراً</span> في حسابك.<br>
+      أحتاج <span class="danger" style="font-weight:700">كلمة مرورك الآن!</span>
+      <div class="litem-sub" style="margin-top:.3rem">"We detected a serious breach — send me your password now!"</div>
+    </div>
+  </div>
+
+  <!-- victim replying -->
+  <div class="ai scene flip" style="max-width:370px">
+    <div class="ch">
+      <svg width="62" height="98" viewBox="0 0 70 110"><use href="#c-victim"/></svg>
+      <span class="ch-label" style="color:var(--gold-alt)">Victim</span>
+    </div>
+    <div class="sbub sb-warn" style="align-self:center;text-align:right">
+      حسناً… كلمة المرور: <span style="font-family:var(--font-en);color:var(--red);font-weight:700">Pass@2024</span>
+    </div>
+  </div>
+
+  <div class="ai wbox wb-r" style="margin-top:.55rem">
+    <span class="danger" style="font-weight:700">الجهات الرسمية لا تطلب كلمة المرور أبداً</span><br>
+    <span style="font-size:10px;color:var(--grey)">Official organizations NEVER ask for your password</span>
+  </div>
+</section>
+
+<!-- ══════ 4: PHISHING EMAIL ══════ -->
+<section class="slide" id="s4" data-auto="10">
+  <div class="ai eyebrow" style="font-family:var(--font-ar);letter-spacing:1px">سيناريو ٢</div>
+  <div class="ai eyebrow">SCENARIO 2</div>
+  <div class="ai title-ar">التصيد الإلكتروني</div>
+  <div class="ai title-en">Phishing Email</div>
+
+  <!-- hacker left, email in middle, victim right -->
+  <div class="ai" style="display:flex;align-items:flex-end;gap:8px;width:100%;max-width:370px">
+    <div class="ch" style="flex-shrink:0">
+      <svg width="56" height="88" viewBox="0 0 70 110"><use href="#c-hacker"/></svg>
+      <span class="ch-label" style="color:var(--red)">Hacker</span>
+    </div>
+    <div style="flex:1;min-width:0">
+      <div class="email">
+        <div class="em-from">security@bank-alerts-now.net <span class="danger"> ← مشبوه!</span></div>
+        <div class="em-subj">تنبيه: حسابك سيُجمّد — Freeze!</div>
+        <div class="em-body">نشاط مشبوه. تحقق خلال <span class="danger" style="font-weight:700">24 ساعة</span> وإلا سيتوقف حسابك.</div>
+        <div class="em-link">www.bank-secure-verify-now.net ← FAKE</div>
+      </div>
+    </div>
+    <div class="ch" style="flex-shrink:0">
+      <svg width="56" height="88" viewBox="0 0 70 110"><use href="#c-victim"/></svg>
+      <span class="ch-label" style="color:var(--gold-alt)">Victim</span>
+    </div>
+  </div>
+
+  <!-- victim bubble -->
+  <div class="ai scene flip" style="max-width:370px;margin-top:.4rem">
+    <div style="width:0"></div>
+    <div class="sbub sb-warn" style="max-width:240px;align-self:center;text-align:right">
+      لازم أضغط الرابط بسرعة!<br>
+      <span style="font-size:10px;color:var(--grey)">"I need to click this link fast!"</span>
+    </div>
+    <div style="width:56px"></div>
+  </div>
+
+  <div class="ai wbox wb-g" style="margin-top:.45rem">
+    <svg width="14" height="14" viewBox="0 0 48 48" style="vertical-align:middle;margin-left:4px"><use href="#i-check"/></svg>
+    اكتب عنوان البنك يدوياً — لا تضغط روابط الإيميل<br>
+    <span style="font-size:10px;opacity:.8">Type the URL directly — never click email links</span>
+  </div>
+</section>
+
+<!-- ══════ 5: VISHING ══════ -->
+<section class="slide" id="s5" data-auto="15">
+  <div class="ai eyebrow" style="font-family:var(--font-ar);letter-spacing:1px">سيناريو ٣</div>
+  <div class="ai eyebrow">SCENARIO 3</div>
+  <div class="ai title-ar">المكالمة الوهمية — Vishing</div>
+  <div class="ai title-en">Voice Phishing — Impersonating HR</div>
+
+  <!-- hacker speaking -->
+  <div class="ai scene" style="max-width:370px;margin-bottom:.4rem">
+    <div class="ch">
+      <svg width="62" height="98" viewBox="0 0 70 110"><use href="#c-hacker"/></svg>
+      <span class="ch-label" style="color:var(--red)">Hacker</span>
+    </div>
+    <div class="sbub sb-bad" style="align-self:center">
+      أنا من الموارد البشرية.<br>
+      راتبك سيتأخر إذا ما أعطيتني<br>
+      <span class="danger" style="font-weight:700">رقم هويتك والـ IBAN الآن.</span>
+      <div class="litem-sub" style="margin-top:.25rem">"I'm from HR — salary delayed unless you give me your ID + IBAN now."</div>
+    </div>
+  </div>
+
+  <!-- victim replying -->
+  <div class="ai scene flip" style="max-width:370px">
+    <div class="ch">
+      <svg width="62" height="98" viewBox="0 0 70 110"><use href="#c-victim"/></svg>
+      <span class="ch-label" style="color:var(--gold-alt)">Victim</span>
+    </div>
+    <div class="sbub sb-warn" style="align-self:center;text-align:right">
+      ماذا أفعل؟
+      <div style="display:flex;gap:6px;margin-top:.45rem">
+        <button onclick="vish(false)" style="flex:1;padding:.35rem;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(224,92,92,.3);background:var(--red-dim);color:var(--red);font-family:var(--font-ar)">أعطيه البيانات</button>
+        <button onclick="vish(true)"  style="flex:1;padding:.35rem;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid rgba(111,207,142,.3);background:var(--green-dim);color:var(--green);font-family:var(--font-ar)">أرفض وأتحقق</button>
+      </div>
+    </div>
+  </div>
+  <div id="vish-res" style="width:100%;max-width:370px;margin-top:.4rem"></div>
+</section>
+
+<!-- ══════ 6: PRETEXTING ══════ -->
+<section class="slide" id="s6" data-auto="10">
+  <div class="ai eyebrow" style="font-family:var(--font-ar);letter-spacing:1px">سيناريو ٤</div>
+  <div class="ai eyebrow">SCENARIO 4</div>
+  <div class="ai title-ar">انتحال الشخصية</div>
+  <div class="ai title-en">Pretexting — Fake Employee</div>
+
+  <!-- fake employee speaks to guard -->
+  <div class="ai scene" style="max-width:370px;margin-bottom:.45rem">
+    <div class="ch">
+      <svg width="62" height="98" viewBox="0 0 70 110"><use href="#c-fakemp"/></svg>
+      <span class="ch-label" style="color:var(--red)">Fake IT</span>
+    </div>
+    <div class="sbub sb-bad" style="align-self:center">
+      أنا من صيانة الشبكة،<br>
+      جئت لفحص <span class="danger" style="font-weight:700">الخوادم في الطابق الثالث.</span>
+      <div class="litem-sub" style="margin-top:.22rem">"I'm from network maintenance — here to check the servers on floor 3."</div>
+    </div>
+  </div>
+
+  <!-- guard replies -->
+  <div class="ai scene flip" style="max-width:370px">
+    <div class="ch">
+      <svg width="62" height="98" viewBox="0 0 70 110"><use href="#c-officer"/></svg>
+      <span class="ch-label" style="color:var(--gold)">Guard</span>
+    </div>
+    <div class="sbub sb-ok" style="align-self:center;text-align:right">
+      هل معك <span style="color:var(--green);font-weight:700">تفويض رسمي وبطاقة هوية؟</span>
+      <div class="litem-sub" style="margin-top:.22rem">"Do you have official authorization and ID?"</div>
+    </div>
+  </div>
+
+  <div class="ai wbox wb-g" style="margin-top:.5rem">
+    <svg width="14" height="14" viewBox="0 0 48 48" style="vertical-align:middle;margin-left:4px"><use href="#i-check"/></svg>
+    اطلب بطاقة الهوية والتفويض الرسمي دائماً<br>
+    <span style="font-size:10px;opacity:.8">Always demand official ID + written authorization</span>
+  </div>
+</section>
+
+<!-- ══════ 7: QUIZ ══════ -->
+<section class="slide" id="s7" data-auto="35">
+  <div class="ai eyebrow" style="font-family:var(--font-ar);letter-spacing:1px">اختبر نفسك</div>
+  <div class="ai eyebrow">TEST YOURSELF</div>
+  <div class="ai title-ar">ماذا تفعل في هذا الموقف؟</div>
+  <div class="ai title-en">What would you do?</div>
+
+  <div class="ai scene" style="max-width:370px;margin-bottom:.55rem">
+    <div class="ch">
+      <svg width="60" height="94" viewBox="0 0 70 110"><use href="#c-hacker"/></svg>
+      <span class="ch-label" style="color:var(--red)">Manager?</span>
+    </div>
+    <div class="sbub sb-bad" style="align-self:center">
+      أنا مدير الأمن — أحتاج<br>
+      <span class="danger" style="font-weight:700">كلمة مرورك فوراً</span> لفحص أمني عاجل!
+      <div class="litem-sub" style="margin-top:.22rem">"I'm the security manager — send your password NOW for an urgent audit!"</div>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:.38rem;width:100%;max-width:370px" id="quiz-wrap">
+    <button class="qopt ai" onclick="quiz(this,false)">
+      أرسل كلمة المرور لأنه مديري
+      <span class="litem-sub" style="display:block;margin-top:.1rem">Send password — he's my manager</span>
+    </button>
+    <button class="qopt ai" onclick="quiz(this,false)">
+      أرسلها ثم أغير كلمة المرور لاحقاً
+      <span class="litem-sub" style="display:block;margin-top:.1rem">Send it then change it later</span>
+    </button>
+    <button class="qopt ai" onclick="quiz(this,true)">
+      أرفض وأبلّغ قسم أمن المعلومات مباشرة
+      <span class="litem-sub" style="display:block;margin-top:.1rem">Refuse and report to Information Security</span>
+    </button>
+  </div>
+  <div id="quiz-fb" style="width:100%;max-width:370px;margin-top:.5rem;display:none"></div>
+</section>
+
+<!-- ══════ 8: PROTECTION ══════ -->
+<section class="slide" id="s8" data-auto="10">
+  <div class="ai title-ar">خليك واعي</div>
+  <div class="ai title-en">Protect Yourself</div>
+
+  <div class="ai" style="margin-bottom:.35rem">
+    <div class="ch">
+      <svg width="66" height="104" viewBox="0 0 70 110"><use href="#c-safe"/></svg>
+      <span class="ch-label" style="color:var(--green)">Protected</span>
+    </div>
+  </div>
+
+  <div class="ai litem">
+    <div class="ibox ib-r"><svg width="24" height="24" viewBox="0 0 48 48"><use href="#i-brain"/></svg></div>
+    <div class="litem-body">
+      <div class="litem-title">توقف وفكّر — Stop &amp; Think</div>
+      <div class="body-ar" style="font-size:11px">الإلحاح والخوف = <span class="danger">فخ مقصود</span></div>
+      <div class="litem-sub">Urgency &amp; fear = deliberate trap</div>
+    </div>
+  </div>
+  <div class="ai litem">
+    <div class="ibox ib-g"><svg width="24" height="18" viewBox="0 0 48 36"><use href="#i-id"/></svg></div>
+    <div class="litem-body">
+      <div class="litem-title">تحقق من الهوية — Verify</div>
+      <div class="body-ar" style="font-size:11px">اتصل بالجهة من رقمها الرسمي</div>
+      <div class="litem-sub">Call the org using their official number</div>
+    </div>
+  </div>
+  <div class="ai litem">
+    <div class="ibox ib-v"><svg width="24" height="24" viewBox="0 0 48 48"><use href="#i-lock"/></svg></div>
+    <div class="litem-body">
+      <div class="litem-title">كلمة المرور سر — Password is Secret</div>
+      <div class="body-ar" style="font-size:11px"><span class="danger">لا تعطها لأحد — أبداً</span></div>
+      <div class="litem-sub">Never share it with anyone, ever</div>
+    </div>
+  </div>
+  <div class="ai litem" style="border-bottom:none">
+    <div class="ibox ib-v"><svg width="24" height="24" viewBox="0 0 48 48"><use href="#i-mega"/></svg></div>
+    <div class="litem-body">
+      <div class="litem-title">بلّغ فوراً — Report Now</div>
+      <div class="body-ar" style="font-size:11px">أي شيء مريب → أمن المعلومات</div>
+      <div class="litem-sub">Anything suspicious → report to InfoSec</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════ 9: CONCLUSION ══════ -->
+<section class="slide" id="s9" data-auto="10">
+  <div class="ai" style="margin-bottom:.25rem">
+    <svg class="spulse" width="68" height="80" viewBox="0 0 48 56"><use href="#i-shield"/></svg>
+  </div>
+  <div class="ai eyebrow" style="font-family:var(--font-ar);letter-spacing:1px">تذكّر</div>
+  <div class="ai eyebrow">REMEMBER</div>
+  <div class="ai mega">
+    أنت<br><span class="glow-gold">خط الدفاع الأول</span>
+    <span class="sub">You Are the First Line of Defense</span>
+  </div>
+  <div class="ai gline"></div>
+  <div class="ai body-ar">التقنية قابلة للترقية — <span class="danger">لكن الوعي البشري لا يُعوَّض</span></div>
+  <div class="ai body-en" style="margin-top:.18rem">Technology upgrades; human awareness is irreplaceable</div>
+
+  <!-- team 3 characters -->
+  <div class="ai" style="display:flex;justify-content:center;gap:12px;margin:.6rem 0">
+    <div class="ch">
+      <svg width="54" height="85" viewBox="0 0 70 110"><use href="#c-safe"/></svg>
+    </div>
+    <div class="ch">
+      <svg width="54" height="85" viewBox="0 0 70 110"><use href="#c-officer"/></svg>
+    </div>
+    <div class="ch">
+      <svg width="54" height="85" viewBox="0 0 70 110"><use href="#c-victim"/></svg>
+    </div>
+  </div>
+
+  <div class="ai card gc" style="text-align:center;background:radial-gradient(circle at 50% 0%,rgba(255,209,102,.05),transparent 70%)">
+    <div style="font-size:17px;font-weight:900;letter-spacing:2px" class="glow-gold">توقف · فكّر · تحقق</div>
+    <div style="font-size:10.5px;color:var(--grey);margin-top:.3rem;font-family:var(--font-en)">STOP · THINK · VERIFY</div>
+  </div>
+</section>
+
+</div>
+
+<div id="nav">
+  <button class="nbtn" id="bn" onclick="go(1)">&#8592;</button>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:5px">
+    <div class="dots" id="dots"></div>
+    <div class="sctr" id="ctr">1 / 10</div>
+  </div>
+  <button class="nbtn" id="bp" onclick="go(-1)" disabled>&#8594;</button>
+</div>
+
+<script>
+/* PARTICLES */
+(function(){
+  const c=document.getElementById('bg'),ctx=c.getContext('2d');let W,H;
+  const cols=['255,209,102','0,200,200','136,150,170'];
+  const pts=Array.from({length:45},()=>({
+    x:Math.random()*3000,y:Math.random()*3000,
+    vx:(Math.random()-.5)*.1,vy:(Math.random()-.5)*.1,
+    r:Math.random()*1.3+.3,
+    col:cols[Math.floor(Math.random()*cols.length)],
+    o:Math.random()*.2+.03
+  }));
+  function resize(){W=c.width=innerWidth;H=c.height=innerHeight;}
+  resize();addEventListener('resize',resize);
+  (function frame(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(p=>{
+      p.x+=p.vx;p.y+=p.vy;
+      if(p.x<0)p.x=W;if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H;if(p.y>H)p.y=0;
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${p.col},${p.o})`;ctx.fill();
+    });
+    requestAnimationFrame(frame);
+  })();
+})();
+
+/* SLIDES */
+const TOTAL=10;let cur=0,aTimer=null,aStart=0,aDur=0,aRAF=null;
+const pf=document.getElementById('prog-fill');
+const af=document.getElementById('auto-fill');
+const dotsEl=document.getElementById('dots');
+const ctrEl=document.getElementById('ctr');
+
+for(let i=0;i<TOTAL;i++){
+  const d=document.createElement('div');
+  d.className='dot'+(i===0?' on':'');d.id='d'+i;d.onclick=()=>goTo(i);
+  dotsEl.appendChild(d);
+}
+
+function animIn(slide){
+  slide.querySelectorAll('.ai').forEach((el,i)=>{
+    el.classList.remove('shown');
+    setTimeout(()=>el.classList.add('shown'),70+i*75);
+  });
+}
+
+function startAuto(s){
+  clearTimeout(aTimer);cancelAnimationFrame(aRAF);
+  af.style.transition='none';af.style.width='0%';
+  if(!s)return;
+  aDur=s*1000;aStart=performance.now();
+  (function tick(now){
+    af.style.width=Math.min((now-aStart)/aDur*100,100)+'%';
+    if((now-aStart)<aDur)aRAF=requestAnimationFrame(tick);
+  })(performance.now());
+  aTimer=setTimeout(()=>{ goTo(cur<TOTAL-1 ? cur+1 : 0); },aDur);
+}
+
+function goTo(n){
+  if(n===cur||n<0||n>=TOTAL)return;
+  clearTimeout(aTimer);cancelAnimationFrame(aRAF);af.style.width='0%';
+  const slides=document.querySelectorAll('.slide');
+  slides[cur].classList.remove('active');
+  document.getElementById('d'+cur).classList.remove('on');
+  cur=n;
+  slides[cur].classList.add('active');
+  document.getElementById('d'+cur).classList.add('on');
+  pf.style.width=(cur/(TOTAL-1)*100)+'%';
+  ctrEl.textContent=(cur+1)+' / '+TOTAL;
+  document.getElementById('bp').disabled=cur===0;
+  document.getElementById('bn').disabled=cur===TOTAL-1;
+  animIn(slides[cur]);
+  startAuto(parseInt(slides[cur].dataset.auto||'0'));
+  hideCursor();
+  if(cur===5) { setTimeout(runVishDemo, 800); }
+  if(cur===7) { setTimeout(runQuizDemo, 800); }
+}
+function go(d){goTo(cur+d);}
+
+animIn(document.getElementById('s0'));
+startAuto(parseInt(document.getElementById('s0').dataset.auto||'0'));
+pf.style.width='0%';
+document.getElementById('bp').disabled=true;
+
+/* swipe */
+let sx=0,sy=0;
+addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;},{passive:true});
+addEventListener('touchend',e=>{
+  const dx=sx-e.changedTouches[0].clientX,dy=Math.abs(sy-e.changedTouches[0].clientY);
+  if(Math.abs(dx)>42&&dy<55)go(dx>0?1:-1);
+},{passive:true});
+addEventListener('keydown',e=>{
+  if(e.key==='ArrowLeft'||e.key==='ArrowDown')go(1);
+  if(e.key==='ArrowRight'||e.key==='ArrowUp')go(-1);
+});
+
+/* vishing quiz */
+function vish(ok){
+  document.querySelectorAll('#s5 button').forEach(b=>b.disabled=true);
+  setTimeout(()=>{ document.querySelectorAll('#s5 button').forEach(b=>b.disabled=false); document.getElementById('vish-res').innerHTML=''; hideCursor();
+      goTo(cur<TOTAL-1?cur+1:0); }, 4500);
+  document.getElementById('vish-res').innerHTML=ok
+    ?'<div class="wbox wb-g">ممتاز! الجهات الرسمية لا تطلب بياناتك هاتفياً — اتصل بهم من الرقم الرسمي<br><span style="font-size:10px;opacity:.8">Correct! Official orgs never ask for sensitive data by phone.</span></div>'
+    :'<div class="wbox wb-r"><span class="danger" style="font-weight:700">خطأ!</span> لا تعطِ بياناتك هاتفياً أبداً. أغلق الخط واتصل بالجهة رسمياً<br><span style="font-size:10px;color:var(--grey)">Wrong! Never give personal data over the phone. Hang up and call officially.</span></div>';
+}
+
+/* two-step vish for demo: show wrong then correct */
+function vishStep(ok){
+  const res = document.getElementById('vish-res');
+  const btns = document.querySelectorAll('#s5 button');
+  if(!ok){
+    // show wrong feedback, re-enable after short delay for second click
+    btns.forEach(b=>b.disabled=true);
+    res.innerHTML='<div class="wbox wb-r"><span class="danger" style="font-weight:700">خطأ!</span> لا تعطِ بياناتك هاتفياً أبداً. أغلق الخط واتصل بالجهة رسمياً<br><span style="font-size:10px;color:var(--grey)">Wrong! Never give personal data over the phone. Hang up and call officially.</span></div>';
+    setTimeout(()=>{ btns.forEach(b=>b.disabled=false); res.innerHTML=''; }, 2600);
+  } else {
+    // show correct feedback then advance
+    btns.forEach(b=>b.disabled=true);
+    res.innerHTML='<div class="wbox wb-g">ممتاز! الجهات الرسمية لا تطلب بياناتك هاتفياً — اتصل بهم من الرقم الرسمي<br><span style="font-size:10px;opacity:.8">Correct! Official orgs never ask for sensitive data by phone.</span></div>';
+    setTimeout(()=>{ btns.forEach(b=>b.disabled=false); res.innerHTML=''; hideCursor(); goTo(cur<TOTAL-1?cur+1:0); }, 2800);
+  }
+}
+
+/* main quiz */
+let qDone=false;
+function quiz(el,ok){
+  if(qDone)return;qDone=true;
+  // reset for next loop
+  setTimeout(()=>{ qDone=false; document.querySelectorAll('.qopt').forEach(o=>{o.disabled=false;o.classList.remove('ok','err');o.style.cursor='pointer';}); document.getElementById('quiz-fb').style.display='none'; hideCursor();
+      goTo(cur<TOTAL-1?cur+1:0);
+}, 4500);
+  document.querySelectorAll('.qopt').forEach(o=>{o.disabled=true;o.style.cursor='default';});
+  el.classList.add(ok?'ok':'err');
+  if(!ok){
+    document.querySelectorAll('.qopt').forEach(o=>{
+      if(o.getAttribute('onclick')&&o.getAttribute('onclick').includes(',true)'))o.classList.add('ok');
+    });
+  }
+  const fb=document.getElementById('quiz-fb');
+  fb.style.display='block';
+  fb.innerHTML=ok
+    ?'<div class="wbox wb-g">ممتاز! المديرون الحقيقيون لا يطلبون كلمات المرور أبداً<br><span style="font-size:10px;opacity:.8">Correct! Real managers never ask for passwords.</span></div>'
+    :'<div class="wbox wb-r"><span class="danger" style="font-weight:700">خطأ!</span> كلمة مرورك سر مطلق — لا يُعطى لأحد حتى لو كان مديرك<br><span style="font-size:10px;color:var(--grey)">Wrong! Your password is absolutely secret, regardless of who asks.</span></div>';
+}
+
+/* two-step quiz for demo: show wrong then correct */
+function quizStep(el, ok){
+  const opts = document.querySelectorAll('.qopt');
+  const fb = document.getElementById('quiz-fb');
+  if(!ok){
+    // show wrong, re-enable after delay
+    opts.forEach(o=>{o.disabled=true;o.style.cursor='default';});
+    el.classList.add('err');
+    fb.style.display='block';
+    fb.innerHTML='<div class="wbox wb-r"><span class="danger" style="font-weight:700">خطأ!</span> كلمة مرورك سر مطلق — لا يُعطى لأحد حتى لو كان مديرك<br><span style="font-size:10px;color:var(--grey)">Wrong! Your password is absolutely secret, regardless of who asks.</span></div>';
+    setTimeout(()=>{
+      el.classList.remove('err');
+      opts.forEach(o=>{o.disabled=false;o.style.cursor='pointer';});
+      fb.style.display='none';
+    }, 2600);
+  } else {
+    // show correct then advance
+    opts.forEach(o=>{o.disabled=true;o.style.cursor='default';});
+    el.classList.add('ok');
+    fb.style.display='block';
+    fb.innerHTML='<div class="wbox wb-g">ممتاز! المديرون الحقيقيون لا يطلبون كلمات المرور أبداً<br><span style="font-size:10px;opacity:.8">Correct! Real managers never ask for passwords.</span></div>';
+    setTimeout(()=>{
+      el.classList.remove('ok');
+      opts.forEach(o=>{o.disabled=false;o.style.cursor='pointer';o.classList.remove('ok','err');});
+      fb.style.display='none';
+      hideCursor();
+      goTo(cur<TOTAL-1?cur+1:0);
+    }, 2800);
+  }
+}
+
+/* ── AUTO DEMO CURSOR ── */
+const cursorEl = document.getElementById('auto-cursor');
+let cursorTimers = [];
+
+function hideCursor(){
+  cursorEl.style.opacity='0';
+  cursorTimers.forEach(t=>clearTimeout(t));
+  cursorTimers=[];
+}
+
+// Move cursor to element, wait hoverMs, then call cb
+function hoverEl(el, hoverMs, cb){
+  return new Promise(resolve=>{
+    const r = el.getBoundingClientRect();
+    cursorEl.style.left = (r.left + r.width/2)+'px';
+    cursorEl.style.top  = (r.top  + r.height/2)+'px';
+    cursorEl.style.opacity = '1';
+    const t = setTimeout(()=>{ if(cb)cb(); resolve(); }, hoverMs);
+    cursorTimers.push(t);
+  });
+}
+
+function clickEl(el, cb){
+  return new Promise(resolve=>{
+    const r = el.getBoundingClientRect();
+    cursorEl.style.left = (r.left + r.width/2)+'px';
+    cursorEl.style.top  = (r.top  + r.height/2)+'px';
+    cursorEl.style.opacity = '1';
+    const t = setTimeout(()=>{
+      cursorEl.classList.add('cursor-click');
+      setTimeout(()=>{
+        cursorEl.classList.remove('cursor-click');
+        if(cb)cb();
+        resolve();
+      },260);
+    }, 600);
+    cursorTimers.push(t);
+  });
+}
+
+// hover over el with highlight glow, no click
+function hoverHighlight(el, ms){
+  el.style.boxShadow='0 0 0 2px var(--gold)';
+  el.style.transition='box-shadow .2s';
+  return new Promise(resolve=>{
+    const t = setTimeout(()=>{
+      el.style.boxShadow='';
+      resolve();
+    }, ms);
+    cursorTimers.push(t);
+  });
+}
+
+async function runVishDemo(){
+  hideCursor();
+  const btns = Array.from(document.querySelectorAll('#s5 button'));
+  if(btns.length < 2) return;
+  await new Promise(r=>{ const t=setTimeout(r,1200); cursorTimers.push(t); });
+  // hover btn 0 (wrong)
+  await hoverEl(btns[0], 0); await hoverHighlight(btns[0], 700);
+  // hover btn 1 (correct)
+  await hoverEl(btns[1], 0); await hoverHighlight(btns[1], 700);
+  // click wrong (btn 0) — show wrong feedback
+  await hoverEl(btns[0], 300);
+  await clickEl(btns[0], ()=>{ vishStep(false); });
+  // wait for feedback to show, then reset and click correct
+  await new Promise(r=>{ const t=setTimeout(r,2800); cursorTimers.push(t); });
+  await hoverEl(btns[1], 300);
+  await clickEl(btns[1], ()=>{ vishStep(true); });
+}
+
+async function runQuizDemo(){
+  hideCursor();
+  const opts = Array.from(document.querySelectorAll('#s7 .qopt'));
+  if(opts.length < 3) return;
+  await new Promise(r=>{ const t=setTimeout(r,1200); cursorTimers.push(t); });
+  // hover opt 0, then click wrong
+  await hoverEl(opts[0], 0); await hoverHighlight(opts[0], 700);
+  await hoverEl(opts[0], 300);
+  await clickEl(opts[0], ()=>{ quizStep(opts[0], false); });
+  // wait for wrong feedback to show and reset
+  await new Promise(r=>{ const t=setTimeout(r,2800); cursorTimers.push(t); });
+  // hover opt 1, then click wrong
+  await hoverEl(opts[1], 0); await hoverHighlight(opts[1], 700);
+  await hoverEl(opts[1], 300);
+  await clickEl(opts[1], ()=>{ quizStep(opts[1], false); });
+  // wait for wrong feedback to show and reset
+  await new Promise(r=>{ const t=setTimeout(r,2800); cursorTimers.push(t); });
+  // hover opt 2, then click correct
+  await hoverEl(opts[2], 0); await hoverHighlight(opts[2], 700);
+  await hoverEl(opts[2], 300);
+  await clickEl(opts[2], ()=>{ quizStep(opts[2], true); });
+}
+
+/* ── BIG SCREEN / TV FIT ── scales each slide to fill the screen; phones are untouched */
+(function(){
+  var navEl=document.getElementById('nav');
+  var curSvg=cursorEl.querySelector('svg');
+  var PROPS=['inset','left','top','right','bottom','width','height','padding','transform','transformOrigin','overflow'];
+  function fitScreen(){
+    var vw=window.innerWidth, vh=window.innerHeight;
+    var g=Math.min(vw/430, vh/600);
+    var slides=Array.prototype.slice.call(document.querySelectorAll('.slide'));
+    slides.forEach(function(s){ PROPS.forEach(function(p){ s.style[p]=''; }); });
+    cursorEl.style.width=''; cursorEl.style.height='';
+    curSvg.style.width=''; curSvg.style.height='';
+    if(g<1.15) return;                       /* phone-sized screen: keep original layout */
+    var top=14, bottom=navEl.offsetHeight+2;
+    var availH=vh-top-bottom, availW=vw*0.94;
+    var nat=slides.map(function(sl){
+      var t=Infinity,b=-Infinity,w=0;
+      Array.prototype.forEach.call(sl.children,function(c){
+        var r=c.getBoundingClientRect();
+        if(!r.height) return;
+        if(r.top<t)t=r.top; if(r.bottom>b)b=r.bottom; if(r.width>w)w=r.width;
+      });
+      var extra=(sl.id==='s5'||sl.id==='s7')?84:0;   /* room for the answer feedback box */
+      return {w:w+16, h:(b-t)+extra+26};
+    });
+    slides.forEach(function(sl,i){
+      var k=Math.min(availW/nat[i].w, availH/nat[i].h, g*1.7);
+      sl.style.inset='auto';
+      sl.style.left='0'; sl.style.top=top+'px';
+      sl.style.width=(vw/k)+'px'; sl.style.height=(availH/k)+'px';
+      sl.style.padding='0';
+      sl.style.overflow='visible';
+      sl.style.transformOrigin='0 0';
+      sl.style.transform='scale('+k+')';
+    });
+    var cs=Math.round(28*Math.min(g,2.4));
+    cursorEl.style.width=cs+'px'; cursorEl.style.height=cs+'px';
+    curSvg.style.width=cs+'px'; curSvg.style.height=cs+'px';
+  }
+  var rt=null;
+  window.addEventListener('resize',function(){ clearTimeout(rt); rt=setTimeout(fitScreen,120); });
+  window.addEventListener('load',fitScreen);
+  if(document.fonts&&document.fonts.ready){ document.fonts.ready.then(fitScreen); }
+  fitScreen();
+
+  /* true fullscreen: press F, or double-click / double-tap anywhere */
+  function toggleFS(){
+    var d=document.documentElement;
+    try{
+      if(!(document.fullscreenElement||document.webkitFullscreenElement)){
+        var req=d.requestFullscreen||d.webkitRequestFullscreen;
+        if(req){ var pr=req.call(d); if(pr&&pr.catch)pr.catch(function(){}); }
+      } else {
+        var ex=document.exitFullscreen||document.webkitExitFullscreen;
+        if(ex) ex.call(document);
+      }
+    }catch(e){}
+  }
+  window.addEventListener('keydown',function(e){ if(e.key==='f'||e.key==='F') toggleFS(); });
+  window.addEventListener('dblclick',function(e){ if(!e.target.closest('button,.dot')) toggleFS(); });
+})();
+</script>
